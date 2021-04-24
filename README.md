@@ -22,7 +22,7 @@ Run `pip3 install -r requirement.txt`
 1/ `source .env` to load Twitter credentials in shell environnement.  
 2/ `python3 main.py` will search and post list of tweets !  
 
-Create a cron task to run program regulary.
+Create a cron task to run the bot regulary.
 
 # Credits
 
