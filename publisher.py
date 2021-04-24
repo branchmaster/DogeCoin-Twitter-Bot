@@ -49,8 +49,9 @@ class DogePublisher:
 
         message = f"Update {now}\n\n"
         message += "Track #DogeCoin related keywords/hashtags\n" + \
-        "Display list of tweet from certified account or with social activity.\n\n" + \
-        "To get all threads, perform search using 'Update (from:DogeNewsBot1)'"
+        "Display list of tweet from certified account or with social activity.\n\n"
+        message += "To get all threads, perform search using 'Update (from:{})'".\
+                format(self._api.me().screen_name)
 
         last_id = self._api.update_status(message).id
 
