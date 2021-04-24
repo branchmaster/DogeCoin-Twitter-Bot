@@ -1,6 +1,7 @@
 # DogeCoin-Twitter-Bot
 .*.sw[pno]
 .env
+.env.*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
