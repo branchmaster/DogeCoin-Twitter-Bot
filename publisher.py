@@ -1,19 +1,5 @@
 from datetime import datetime
-import peewee
-
-db_tweet_record = peewee.SqliteDatabase("tweets.db")
-
-class Tweets(peewee.Model):
-    """
-    SQL table to store list of published tweet. Let avoid
-    posting twice the same tweet.
-    """
-    tweet_id = peewee.CharField(unique=True)
-
-    class Meta:
-        database = db_tweet_record
-
-db_tweet_record.create_tables([Tweets])
+from record import Tweets
 
 class DogePublisher:
     """
@@ -62,14 +48,6 @@ class DogePublisher:
         self.post_tweet_list(requested_tweets['famous'],
                 intro_sentence="Active tweet 🚀",
                 previous_id_tweet=last_id)
-
-    @staticmethod
-    def _is_tweeted(tweet_id):
-        try:
-            Tweets.get(Tweets.tweet_id == tweet_id)
-            return True
-        except Tweets.DoesNotExist:
-            return False
 
     @staticmethod
     def _store_tweet(tweet_id):
