@@ -12,7 +12,7 @@ class TwitterFilter:
     HOURS_PREVIEW = 2
 
     DEFAULT_FILTERS = [
-            # "hours_limit",
+            "hours_limit",
             "user_ban",
             "posted_tweet",
             ]
