@@ -42,6 +42,17 @@ class TwitterResearcher:
 
         return list(final_tweet_list)
 
+    def multiple_search(self, keyword_list, *args, **kwargs):
+        """
+        Search for multiple keyword at once, using same parameters
+        for each query.
+        """
+        tweet_list = []
+
+        for keyword in keyword_list:
+            tweet_list += self.search(keyword, *args, **kwargs)
+        return tweet_list
+
     def _prepare_parameters(self, keyword, certified, 
             min_faves, min_retweets, min_replies):
         """
