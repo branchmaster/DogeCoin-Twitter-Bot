@@ -20,7 +20,7 @@ class TwitterResearcher:
         @keyword:                       Keyword to search for
         @certified: [True|False|None]   Get only or no certified account,
                                         None won't care about.
-        @tweet_filter:                  (Work in progress)
+        @tweet_filter:                  Instance of TwitterFilter
         @min_faves:                     Minimum number of likes
         @min_retweets:                  Minimum number of retweets
         @min_replies:                   Minimum number of replies
