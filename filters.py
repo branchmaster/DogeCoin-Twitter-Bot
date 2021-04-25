@@ -57,8 +57,7 @@ class TwitterFilter:
         """
         Control if the user isn't black listed.
         """
-        tweet_user = tweet.author.screen_name
-        return tweet_user not in self.ban_list
+        return tweet.author.screen_name not in self.ban_list
 
     def posted_tweet(self, tweet):
         """
