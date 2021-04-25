@@ -1,5 +1,3 @@
-import datetime
-
 class TwitterResearcher:
     """
     Interface to search list of tweet related to given keyword.
@@ -39,8 +37,8 @@ class TwitterResearcher:
         tweet_list = self._api.search(query, lang=self.LANG,
                 result_type="recent")
 
-        #Apply filtering on the list of tweet.
-        final_tweet_list = filter(self._date_filter, tweet_list)
+        #Apply filters on the list of tweet.
+        final_tweet_list = filter(tweet_filter, tweet_list)
 
         return list(final_tweet_list)
 
@@ -115,13 +113,3 @@ class TwitterResearcher:
                 "-filter:retweets",
                 ]
         return parameters
-
-    def _date_filter(self, tweet):
-        """
-        Filter function, verify if tweet have been posted in range
-        inferior to HOURS_PREVIEW.
-        """
-        hours_limit = datetime.timedelta(hours=2)
-        release_since = datetime.datetime.utcnow() - tweet.created_at
-
-        return release_since <= hours_limit

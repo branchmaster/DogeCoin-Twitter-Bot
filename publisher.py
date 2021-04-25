@@ -10,21 +10,11 @@ class DogePublisher:
     def __init__(self, api, requested_tweets):
         self._api = api
 
-        self._remove_posted_tweets(requested_tweets)
         #Avoid post if no tweet founded
         if not any(requested_tweets.values()):
             exit()
 
         self.post_thread(requested_tweets)
-
-    def _remove_posted_tweets(self, requested_tweets):
-        """
-        Remove already posted tweet stored in Tweets sql table.
-        """
-        for category in requested_tweets:
-            unsended_tweets = [tweet for tweet in requested_tweets[category]
-                    if not self._is_tweeted(tweet)]
-            requested_tweets[category] = unsended_tweets
 
     def post_thread(self, requested_tweets):
         """
