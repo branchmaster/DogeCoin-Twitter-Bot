@@ -1,18 +1,11 @@
 import datetime
 
-class DogeResearch:
+class TwitterResearcher:
     """
-    Search for tweet related to given keywords.
-    Get only tweet published by certified account, or with
-    important social activity, with metrics above LIKES, RETWEETS
-    and COMMENTS.
+    Interface to search list of tweet related to given keyword.
+    Enable a query configuration, see self.search for available
+    parameters.
     """
-    #Expected number of likes, retweets, should indicate tweet fame
-    LIKES = 150
-    RETWEETS = 150
-    COMMENTS = 150
-    HOURS_PREVIEW = 2
-
     #Config variables
     LANG="en"
 
@@ -20,70 +13,115 @@ class DogeResearch:
         #Login to twitter
         self._api = api
 
-    def search(self, keyword):
+    def search(self, keyword, certified=None, tweet_filter=None,
+            min_faves=None, min_retweets=None, min_replies=None):
         """
-        Retrieve list of tweet related to given keyword.
-        """
-        famous_tweets = self._famous_search(keyword)
-        certified_tweets = self._certified_search(keyword)
+        Search for list of tweet for a given keyword.
 
-        return {"certified" : certified_tweets,
-                "famous" : famous_tweets}
-
-    def _query(self, keyword, extra_parameters):
+        Available parameters:
+        @keyword:                       Keyword to search for
+        @certified: [True|False|None]   Get only or no certified account,
+                                        None won't care about.
+        @tweet_filter:                  (Work in progress)
+        @min_faves:                     Minimum number of likes
+        @min_retweets:                  Minimum number of retweets
+        @min_replies:                   Minimum number of replies
         """
-        Query for all api request, to add default parameters
-        on each query.
-        """
-        #Prepare entire query parameters
-        default_parameters = [
-                f"{keyword} OR #{keyword}",
-                "-filter:retweets",
-                ]
-        query = " ".join(default_parameters + extra_parameters)
+        parameters = self._prepare_parameters(
+                keyword=keyword, certified=certified,
+                min_faves=min_faves, min_retweets=min_retweets,
+                min_replies=min_replies
+                )
 
-        #Perform the query
+        query = " ".join(parameters)
+
+        #Perform the query using Twitter API
         tweet_list = self._api.search(query, lang=self.LANG,
                 result_type="recent")
 
-        #Filter the query
-        return list(filter(self._date_filter, tweet_list))
+        #Apply filtering on the list of tweet.
+        final_tweet_list = filter(self._date_filter, tweet_list)
 
-    def _famous_search(self, keyword):
-        """
-        Query search of tweet with good social metrics,
-        using LIKES, COMMENTS and RETWEET limitation.
-        """
-        #Set social metrics, retrieve post having one
-        #or more of this metrics using OR operator
-        social_metrics = [
-                f"min_replies:{self.COMMENTS}",
-                f"min_faves:{self.LIKES}",
-                f"min_retweets:{self.RETWEETS}",
-                ]
-        social_metrics_query = " OR ".join(social_metrics)
+        return list(final_tweet_list)
 
-        query_parameters = [
-                social_metrics_query,
-                f"-filter:verified",
-                ]
-        return self._query(keyword, query_parameters)
+    def _prepare_parameters(self, keyword, certified, 
+            min_faves, min_retweets, min_replies):
+        """
+        Create all query parameters according to the configuration.
+        """
+        query_parameters = []
 
-    def _certified_search(self, keyword):
+        #Use each helpers to fill parameters
+        query_parameters += self._certified_parameters(certified)
+        query_parameters += self._minimal_parameters(min_faves,
+                min_retweets, min_replies)
+        query_parameters += self._default_parameters()
+
+        #Finally set up keyword argument
+        keyword_parameter = f"{keyword} OR #{keyword}"
+        query_parameters.append(keyword_parameter)
+
+        return query_parameters
+
+    @staticmethod
+    def _certified_parameters(certified):
         """
-        Query search of tweet posted by certified account only.
+        Enable/disable search with certified account only.
+
+        @certified: accept True, False or None.
+
+        True or False will enable or disable the search of
+        certified account.
+        None will allow both, normal search.
         """
-        query_parameters = [
-                "filter:verified",
+        parameters = []
+        if certified is not None:
+            parameters.append("filter:verified")
+        if certified is False:
+            parameters[0] = "-" + parameters[0]
+        return parameters
+
+    @staticmethod
+    def _minimal_parameters(min_faves, min_retweets,
+            min_replies):
+        """
+        Create parameters for minimum like, retweets and replies.
+
+        If enabled, query will format the entire set with OR operator.
+        """
+        parameters = []
+
+        #Format string for each type, like "min_retweets:15"
+        for minimal_type in {"faves", "retweets", "replies"}:
+            minimal_type = "min_" + minimal_type
+            minimal_value = locals()[minimal_type]
+
+            if minimal_value is not None:
+                minimal_argument = f"{minimal_type}:{minimal_value}"
+                parameters.append(minimal_argument)
+
+        #Create single string with all minimal using OR operator.
+        if len(parameters) > 0:
+            parameters = [" OR ".join(parameters)]
+
+        return parameters
+
+    @staticmethod
+    def _default_parameters():
+        """
+        Parameters by defaults, applied to every query.
+        """
+        parameters = [
+                "-filter:retweets",
                 ]
-        return self._query(keyword, query_parameters)
+        return parameters
 
     def _date_filter(self, tweet):
         """
         Filter function, verify if tweet have been posted in range
         inferior to HOURS_PREVIEW.
         """
-        hours_limit = datetime.timedelta(hours=self.HOURS_PREVIEW)
+        hours_limit = datetime.timedelta(hours=2)
         release_since = datetime.datetime.utcnow() - tweet.created_at
 
         return release_since <= hours_limit
