@@ -1,23 +1,32 @@
 from config import get_tweepy_api
-from researcher import DogeResearch
-from publisher import DogePublisher
+from researcher import TwitterResearcher
+from publisher import TwitterPublisher
+from filters import TwitterFilter
 
 TERM_LIST = ["dogecoin", "doge", "dogearmy", "dogeday"]
 
-def search_term_list(doge_research):
-    list_tweet = {
-            "certified" : [],
-            "famous" : [],
-            }
+def bot_routine(searcher, publisher):
+    """
+    Perform bot routine, research and post list of tweet.
 
-    for term in TERM_LIST:
-        founded_tweets = doge_research.search(term)
-        list_tweet['certified'].extend(founded_tweets['certified'])
-        list_tweet['famous'].extend(founded_tweets['famous'])
+    Prepare mutliple list to be posted at once in a single thread.
+    """
+    #Search tweets from certified account
+    certified_tweets = searcher.multiple_search(TERM_LIST,
+            certified=True, tweet_filter=TwitterFilter())
+    publisher.store_tweet_list("Certified Account ✅", certified_tweets)
 
-    return list_tweet
+    #Search tweets with some social activity, with
+    #minimal likes, retweets or replies.
+    low_limit = 150
+    active_tweets = searcher.multiple_search(TERM_LIST, certified=False,
+            tweet_filter=TwitterFilter(), min_faves=low_limit,
+            min_retweets=low_limit, min_replies=low_limit)
+    publisher.store_tweet_list("Active tweet 🚀", active_tweets)
+
+    #Publish each stored list on Twitter as a single thread.
+    publisher.post_thread()
 
 if __name__ == "__main__":
     api = get_tweepy_api()
-    list_tweet = search_term_list(DogeResearch(api))
-    DogePublisher(api, list_tweet)
+    bot_routine(TwitterResearcher(api), TwitterPublisher(api))
