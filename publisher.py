@@ -1,25 +1,48 @@
 from datetime import datetime
 from record import Tweets
 
-class DogePublisher:
+class TwitterPublisher:
     """
     Manage publication of tweet list related to dogecoin.
 
     Create thread to display all tweet in the same place.
     """
-    def __init__(self, api, requested_tweets):
+    def __init__(self, api):
         self._api = api
+        self.registered_lists = []
 
-        #Avoid post if no tweet founded
-        if not any(requested_tweets.values()):
-            exit()
+        #Always Keep last tweet id, reply is used to create thread
+        self._last_tweet_id = None
 
-        self.post_thread(requested_tweets)
+    def store_tweet_list(self, intro_sentence, tweet_list):
+        """
+        Store a single list of tweet who will be displayed in the thread.
+        Associate each list with a sentence display with each tweet
+        of this list.
+        """
+        if tweet_list:
+            self.registered_lists.append((intro_sentence, tweet_list))
 
-    def post_thread(self, requested_tweets):
+    def post_thread(self):
         """
         Post the entire thread on twitter profil
         linked to the program.
+        """
+        #Avoid post if no tweet founded
+        if len(self.registered_lists) == 0:
+            return None
+
+        #Post introduction message, first tweet of the thread
+        self._last_tweet_id = self._api.update_status(self._intro_message).id
+
+        #Post all stored list one by one
+        for intro_sentence, tweet_list in self.registered_lists:
+            self._post_tweet_list(tweet_list, intro_sentence)
+
+    @property
+    def _intro_message(self):
+        """
+        Format the introduction tweet, first tweet of the thread.
         """
         now = datetime.utcnow().strftime("%m/%d %H:%M UTC")
 
@@ -28,45 +51,30 @@ class DogePublisher:
         "Display list of tweet from certified account or with social activity.\n\n"
         message += "To get all threads, perform search using 'Update (from:{})'".\
                 format(self._api.me().screen_name)
+        return message
 
-        last_id = self._api.update_status(message).id
-
-        last_id = self.post_tweet_list(requested_tweets['certified'],
-                intro_sentence="Certified Account ✅",
-                previous_id_tweet=last_id)
-
-        self.post_tweet_list(requested_tweets['famous'],
-                intro_sentence="Active tweet 🚀",
-                previous_id_tweet=last_id)
-
-    @staticmethod
-    def _store_tweet(tweet_id):
-        Tweets.create(tweet_id=tweet_id).save()
-
-    def post_tweet_list(self, tweet_list, intro_sentence, \
-            previous_id_tweet):
+    def _post_tweet_list(self, tweet_list, intro_sentence):
         """
         Post a list of tweet in a threded tweet.
         Add an introduction sentance in the first tweet.
         """
         for tweet in tweet_list:
-            if self._is_tweeted(tweet.id_str):
+            if Tweets.is_tweeted(tweet):
                 continue
 
-            text = intro_sentence + "\n"
-            
             tweet_url = "https://twitter.com/{}/status/{}".format(
                     tweet.author.id,
                     tweet.id
                     )
 
+            text = intro_sentence + "\n"
             text += tweet_url
             
             new_tweet = self._api.update_status(text,
-                    in_reply_to_status_id=previous_id_tweet,
+                    in_reply_to_status_id=self._last_tweet_id,
                     auto_populate_reply_metadata=True)
 
-            previous_id_tweet = new_tweet.id
-            self._store_tweet(tweet.id_str)
+            self._last_tweet_id = new_tweet.id
 
-        return previous_id_tweet
+            #Store tweet id in sql database
+            Tweets.store_tweet(tweet)
