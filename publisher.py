@@ -29,7 +29,7 @@ class TwitterPublisher:
         linked to the program.
         """
         #Avoid post if no tweet founded
-        if len(self.registered_lists) == 0:
+        if not self.registered_lists:
             return None
 
         #Post introduction message, first tweet of the thread
