@@ -1,8 +1,11 @@
+
 # DogeCoin-Twitter-Bot
 .*.sw[pno]
 .env
 .env.*
 tweets.db
+
+ban_user
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
