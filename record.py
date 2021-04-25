@@ -20,4 +20,12 @@ class Tweets(peewee.Model):
         except cls.DoesNotExist:
             return False
 
+    @classmethod
+    def store_tweet(cls, tweet):
+        """
+        Register posted tweet in thred in a database. Let the bot avoid
+        duplicate post of the same tweet.
+        """
+        cls.create(tweet_id=tweet.id_str).save()
+
 db_tweet_record.create_tables([Tweets])
