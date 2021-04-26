@@ -12,14 +12,14 @@ def bot_routine(searcher, publisher):
     Prepare mutliple list to be posted at once in a single thread.
     """
     #Search tweets from certified account
-    certified_tweets = searcher.multiple_search(TERM_LIST,
+    certified_tweets = searcher.search(TERM_LIST,
             certified=True, tweet_filter=TwitterFilter())
     publisher.store_tweet_list("Certified Account ✅", certified_tweets)
 
     #Search tweets with some social activity, with
     #minimal likes, retweets or replies.
     low_limit = 150
-    active_tweets = searcher.multiple_search(TERM_LIST, certified=False,
+    active_tweets = searcher.search(TERM_LIST, certified=False,
             tweet_filter=TwitterFilter(), min_faves=low_limit,
             min_retweets=low_limit, min_replies=low_limit)
     publisher.store_tweet_list("Active tweet 🚀", active_tweets)

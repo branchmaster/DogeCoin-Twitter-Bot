@@ -11,13 +11,13 @@ class TwitterResearcher:
         #Login to twitter
         self._api = api
 
-    def search(self, keyword, certified=None, tweet_filter=None,
+    def search(self, keyword_list, certified=None, tweet_filter=None,
             min_faves=None, min_retweets=None, min_replies=None):
         """
-        Search for list of tweet for a given keyword.
+        Search for list of tweet for a given keywords.
 
         Available parameters:
-        @keyword:                       Keyword to search for
+        @keywords:                      List of Keyword to search for
         @certified: [True|False|None]   Get only or no certified account,
                                         None won't care about.
         @tweet_filter:                  Instance of TwitterFilter
@@ -26,7 +26,7 @@ class TwitterResearcher:
         @min_replies:                   Minimum number of replies
         """
         parameters = self._prepare_parameters(
-                keyword=keyword, certified=certified,
+                keyword_list, certified=certified,
                 min_faves=min_faves, min_retweets=min_retweets,
                 min_replies=min_replies
                 )
@@ -42,18 +42,7 @@ class TwitterResearcher:
 
         return list(final_tweet_list)
 
-    def multiple_search(self, keyword_list, *args, **kwargs):
-        """
-        Search for multiple keyword at once, using same parameters
-        for each query.
-        """
-        tweet_list = []
-
-        for keyword in keyword_list:
-            tweet_list += self.search(keyword, *args, **kwargs)
-        return tweet_list
-
-    def _prepare_parameters(self, keyword, certified, 
+    def _prepare_parameters(self, keyword_list, certified, 
             min_faves, min_retweets, min_replies):
         """
         Create all query parameters according to the configuration.
@@ -65,10 +54,7 @@ class TwitterResearcher:
         query_parameters += self._minimal_parameters(min_faves,
                 min_retweets, min_replies)
         query_parameters += self._default_parameters()
-
-        #Finally set up keyword argument
-        keyword_parameter = f"{keyword} OR #{keyword}"
-        query_parameters.append(keyword_parameter)
+        query_parameters += self._keywords_parameters(keyword_list)
 
         return query_parameters
 
@@ -124,3 +110,16 @@ class TwitterResearcher:
                 "-filter:retweets",
                 ]
         return parameters
+
+    @staticmethod
+    def _keywords_parameters(keyword_list):
+        """
+        List of keyword to query. Add 2 value for each keyword,
+        the keyword himself and as hashtag.
+
+        Create the entire keywords list using OR operator.
+        """
+        parameters = []
+        for keyword in keyword_list:
+            parameters += [f"{keyword}", f"#{keyword}"]
+        return [" OR ".join(parameters)]
