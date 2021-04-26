@@ -1,5 +1,5 @@
 # DogeCoin-Twitter-Bot
-Bot to share list of tweet using dogecoin related keywords.
+Bot to share list of tweet using dogecoin related keywords, see [@DogeNewsBot1](https://twitter.com/DogeNewsBot1).
 
 # Installation
 
